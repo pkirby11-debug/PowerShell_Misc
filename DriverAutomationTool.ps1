@@ -195,7 +195,7 @@ function Write-LogEntry {
 	$LogFilePath = Join-Path -Path $LogDirectory -ChildPath $FileName
 	
 	# Construct time stamp for log entry
-	$Time = -join @((Get-Date -Format "HH:mm:ss.fff"), " ", (Get-WmiObject -Class Win32_TimeZone | Select-Object -ExpandProperty Bias))
+	$Time = -join @((Get-Date -Format "HH:mm:ss.fff"), " ", (Get-CimInstance -ClassName Win32_TimeZone | Select-Object -ExpandProperty Bias))
 	
 	# Construct date for log entry
 	$Date = (Get-Date -Format "MM-dd-yyyy")
@@ -1085,7 +1085,7 @@ function Show-MainForm_psf
 				global:Write-LogEntry -Value "-Checking WMI for ConfigMgr SMS_Authority Values" -Severity 1 -SkipGuiLog $true
 				try {
 					$SCCMWMI = Get-CIMInstance -ClassName SMS_Authority -NameSpace root\ccm -ErrorAction SilentlyContinue
-					$SMSProvider = Get-WmiObject -Namespace root\ccm -Class SMS_ProviderLocation -ErrorAction SilentlyContinue | Where-Object {
+					$SMSProvider = Get-CimInstance -Namespace root\ccm -ClassName SMS_ProviderLocation -ErrorAction SilentlyContinue | Where-Object {
 						$_.SiteCode -eq ($SCCMWMI.Name).TrimStart("SMS:")
 					} | Select-Object -ExpandProperty Machine
 					
@@ -1641,11 +1641,11 @@ function Show-MainForm_psf
 			}
 			"*Lenovo*" {
 				$ExtractMake = "Lenovo"
-				$ExtractSKU = ((Get-WmiObject -Class Win32_ComputerSystem | Select-Object -ExpandProperty Model).SubString(0, 4)).Trim()
+				$ExtractSKU = ((Get-CimInstance -ClassName Win32_ComputerSystem | Select-Object -ExpandProperty Model).SubString(0, 4)).Trim()
 			}
 			"*Microsoft*" {
 				$ComputerManufacturer = "Microsoft"
-				$ComputerModel = (Get-WmiObject -Namespace root\wmi -Class MS_SystemInformation | Select-Object -ExpandProperty SystemSKU).Replace("_", " ")
+				$ComputerModel = (Get-CimInstance -Namespace root\wmi -ClassName MS_SystemInformation | Select-Object -ExpandProperty SystemSKU).Replace("_", " ")
 			}
 			default {
 				$ExtractMake = $CurrentModel.Manufacturer
@@ -13631,6 +13631,8 @@ AABJRU5ErkJgggs='))
 	
 	# Windows Version Hash Table
 	$WindowsBuildHashTable = @{
+		'Win11-25H2' = "10.0.26200"
+		'Win11-24H2' = "10.0.26100"
 		'Win11-23H2' = "10.0.22631"
 		'Win11-22H2' = "10.0.22621"
 		'Win11-21H2' = "10.0.22000"
@@ -13698,7 +13700,7 @@ AABJRU5ErkJgggs='))
 		$global:LogFilePath = Join-Path -Path $global:LogDirectory -ChildPath $FileName
 		
 		# Construct time stamp for log entry
-		$Time = -join @((Get-Date -Format "HH:mm:ss.fff"), " ", (Get-WmiObject -Class Win32_TimeZone | Select-Object -ExpandProperty Bias))
+		$Time = -join @((Get-Date -Format "HH:mm:ss.fff"), " ", (Get-CimInstance -ClassName Win32_TimeZone | Select-Object -ExpandProperty Bias))
 		
 		# Construct date for log entry
 		$Date = (Get-Date -Format "MM-dd-yyyy")
@@ -14069,7 +14071,7 @@ AABJRU5ErkJgggs='))
 	
 	function Get-SiteCode ($SiteServer) {
 		try {
-			$SiteCodeObjects = Get-WmiObject -ComputerName $SiteServer -Namespace "root\SMS" -Class SMS_ProviderLocation -ErrorAction Stop
+			$SiteCodeObjects = Get-CimInstance -ComputerName $SiteServer -Namespace "root\SMS" -ClassName SMS_ProviderLocation -ErrorAction Stop
 			$SiteCodeError = $false
 		} catch {
 			global:Write-ErrorOutput -Message "[Error] - $($_.Exception.Message)" -Severity 3
@@ -14312,10 +14314,10 @@ AABJRU5ErkJgggs='))
 				# Add Known HP Models
 				if ($QueryKnownModels -eq $true) {
 					if (-not ([string]::IsNullOrEmpty($SiteServer))) {
-						$HPKnownModels = (Get-WmiObject -ComputerName $SiteServer -Namespace "root\SMS\site_$SiteCode" -Query "Select Distinct Manufacturer, Model from SMS_G_System_COMPUTER_SYSTEM Where (Manufacturer = 'Hewlett-Packard' or Manufacturer = 'HP') and Model not like '%Proliant%'" | Select-Object -ExpandProperty Model) | Sort-Object | Get-Unique -AsString
-						$HPKnownBaseBoardValues = (Get-WmiObject -ComputerName $SiteServer -Namespace "root\SMS\site_$SiteCode" -Query "Select Distinct Product from SMS_G_System_BASEBOARD Where (Manufacturer = 'Hewlett-Packard' or Manufacturer = 'HP') and Product not like '%Proliant%'" | Select-Object -ExpandProperty Product) | Sort-Object | Get-Unique -AsString
+						$HPKnownModels = (Get-CimInstance -ComputerName $SiteServer -Namespace "root\SMS\site_$SiteCode" -Query "Select Distinct Manufacturer, Model from SMS_G_System_COMPUTER_SYSTEM Where (Manufacturer = 'Hewlett-Packard' or Manufacturer = 'HP') and Model not like '%Proliant%'" | Select-Object -ExpandProperty Model) | Sort-Object | Get-Unique -AsString
+						$HPKnownBaseBoardValues = (Get-CimInstance -ComputerName $SiteServer -Namespace "root\SMS\site_$SiteCode" -Query "Select Distinct Product from SMS_G_System_BASEBOARD Where (Manufacturer = 'Hewlett-Packard' or Manufacturer = 'HP') and Product not like '%Proliant%'" | Select-Object -ExpandProperty Product) | Sort-Object | Get-Unique -AsString
 						if ($HPKnownBaseBoardValues.Count -lt 1) {
-							$HPKnownBaseBoardValues = (Get-WmiObject -ComputerName $SiteServer -Namespace "root\SMS\site_$SiteCode" -Query "Select Distinct BaseBoardProduct from SMS_G_System_MS_SYSTEMINFORMATION Where (BaseBoardManufacturer = 'Hewlett-Packard' or BaseBoardManufacturer = 'HP') and SystemProductName not like '%Proliant%'" -ErrorAction SilentlyContinue | Select-Object -ExpandProperty BaseBoardProduct) | Sort-Object | Get-Unique -AsString
+							$HPKnownBaseBoardValues = (Get-CimInstance -ComputerName $SiteServer -Namespace "root\SMS\site_$SiteCode" -Query "Select Distinct BaseBoardProduct from SMS_G_System_MS_SYSTEMINFORMATION Where (BaseBoardManufacturer = 'Hewlett-Packard' or BaseBoardManufacturer = 'HP') and SystemProductName not like '%Proliant%'" -ErrorAction SilentlyContinue | Select-Object -ExpandProperty BaseBoardProduct) | Sort-Object | Get-Unique -AsString
 						}
 					}
 					# Add model to ArrayList if not present
@@ -14437,8 +14439,8 @@ AABJRU5ErkJgggs='))
 				# Add Known Dell Models
 				if ($QueryKnownModels -eq $true) {
 					if (-not ([string]::IsNullOrEmpty($SiteServer))) {
-						$DellKnownModels = Get-WmiObject -ComputerName $SiteServer -Namespace "root\SMS\site_$SiteCode" -Query "Select Distinct Manufacturer, Model from SMS_G_System_COMPUTER_SYSTEM Where Manufacturer = 'Dell Inc.' and  (Model like '%Optiplex%' or Model like '%Latitude%' or Model like '%Precision%' or Model like '%XPS%')" | Select-Object -Property Manufacturer, Model | Sort-Object Model | Get-Unique -AsString
-						$DellKnownBaseBoardValues = (Get-WmiObject -ComputerName $SiteServer -Namespace "root\SMS\site_$SiteCode" -Query "Select Distinct SystemSKU from SMS_G_System_MS_SystemInformation Where BaseBoardManufacturer = 'Dell Inc.'" -ErrorAction SilentlyContinue | Select-Object -ExpandProperty SystemSKU) | Sort-Object | Get-Unique -AsString
+						$DellKnownModels = Get-CimInstance -ComputerName $SiteServer -Namespace "root\SMS\site_$SiteCode" -Query "Select Distinct Manufacturer, Model from SMS_G_System_COMPUTER_SYSTEM Where Manufacturer = 'Dell Inc.' and  (Model like '%Optiplex%' or Model like '%Latitude%' or Model like '%Precision%' or Model like '%XPS%')" | Select-Object -Property Manufacturer, Model | Sort-Object Model | Get-Unique -AsString
+						$DellKnownBaseBoardValues = (Get-CimInstance -ComputerName $SiteServer -Namespace "root\SMS\site_$SiteCode" -Query "Select Distinct SystemSKU from SMS_G_System_MS_SystemInformation Where BaseBoardManufacturer = 'Dell Inc.'" -ErrorAction SilentlyContinue | Select-Object -ExpandProperty SystemSKU) | Sort-Object | Get-Unique -AsString
 					}
 					
 					# Add model to ArrayList if not present
@@ -14533,7 +14535,7 @@ AABJRU5ErkJgggs='))
 				# Add Known Lenovo Models
 				if ($QueryKnownModels -eq $true) {
 					if (-not ([string]::IsNullOrEmpty($SiteServer))) {
-						$LenovoKnownModels = Get-WmiObject -ComputerName $SiteServer -Namespace "root\SMS\site_$SiteCode" -Query "Select Distinct Manufacturer, Model from SMS_G_System_COMPUTER_SYSTEM Where (Manufacturer = 'Lenovo')" | Select-Object -Property Manufacturer, Model | Get-Unique -AsString
+						$LenovoKnownModels = Get-CimInstance -ComputerName $SiteServer -Namespace "root\SMS\site_$SiteCode" -Query "Select Distinct Manufacturer, Model from SMS_G_System_COMPUTER_SYSTEM Where (Manufacturer = 'Lenovo')" | Select-Object -Property Manufacturer, Model | Get-Unique -AsString
 					} elseif ([string]$PlatformComboBox.SelectedItem -match "Intune") {
 						global:Write-LogEntry -Value "- Selecting known Lenovo models from Intune devices" -Severity 1
 						$LenovoKnownModels = $global:ManagedDevices | Select-Object -Property Manufacturer, Model | Where-Object {
@@ -14615,8 +14617,8 @@ AABJRU5ErkJgggs='))
 					$XMLDownloadStatus.Text = "Adding $(($MicrosoftModels).count) Microsoft models"
 				}
 				if (-not ([string]::IsNullOrEmpty($SiteServer))) {
-					if ([boolean](Get-WmiObject -ComputerName $SiteServer -Namespace "root\SMS\site_$SiteCode" -Class SMS_G_System_MS_SYSTEMINFORMATION -ErrorAction SilentlyContinue) -eq $true) {
-						$MicrosoftKnownModels = (Get-WmiObject -ComputerName $SiteServer -Namespace "root\SMS\site_$SiteCode" -Query "Select Distinct SystemManufacturer, SystemProductName, SystemSKU from SMS_G_System_MS_SYSTEMINFORMATION Where (SystemManufacturer like 'Microsoft%') and (SystemProductName like 'Surface%')" | Select-Object -Property SystemManufacturer, SystemProductName, SystemSKU | Get-Unique -AsString) | Sort-Object
+					if ([boolean](Get-CimInstance -ComputerName $SiteServer -Namespace "root\SMS\site_$SiteCode" -ClassName SMS_G_System_MS_SYSTEMINFORMATION -ErrorAction SilentlyContinue) -eq $true) {
+						$MicrosoftKnownModels = (Get-CimInstance -ComputerName $SiteServer -Namespace "root\SMS\site_$SiteCode" -Query "Select Distinct SystemManufacturer, SystemProductName, SystemSKU from SMS_G_System_MS_SYSTEMINFORMATION Where (SystemManufacturer like 'Microsoft%') and (SystemProductName like 'Surface%')" | Select-Object -Property SystemManufacturer, SystemProductName, SystemSKU | Get-Unique -AsString) | Sort-Object
 						
 						if (($MicrosoftModels).Count -gt 0) {
 							if ($MicrosoftKnownModels.Count -gt 0) {
@@ -14757,10 +14759,10 @@ AABJRU5ErkJgggs='))
 	function Get-DPOptions {
 		global:Write-LogEntry -Value "======== Querying ConfigMgr Distribution Options ========" -Severity 1
 		Set-Location -Path ($SiteCode + ":")
-		$DistributionPoints = Get-WmiObject -ComputerName $SiteServer -Namespace "Root\SMS\Site_$SiteCode" -Class SMS_SystemResourceList | Where-Object {
+		$DistributionPoints = Get-CimInstance -ComputerName $SiteServer -Namespace "Root\SMS\Site_$SiteCode" -ClassName SMS_SystemResourceList | Where-Object {
 			$_.RoleName -match "Distribution"
 		} | Select-Object -ExpandProperty ServerName -Unique | Sort-Object
-		$DistributionPointGroups = Get-WmiObject -ComputerName $SiteServer -Namespace "Root\SMS\Site_$SiteCode" -Query "SELECT Distinct Name FROM SMS_DistributionPointGroup" | Select-Object -ExpandProperty Name
+		$DistributionPointGroups = Get-CimInstance -ComputerName $SiteServer -Namespace "Root\SMS\Site_$SiteCode" -Query "SELECT Distinct Name FROM SMS_DistributionPointGroup" | Select-Object -ExpandProperty Name
 		# Populate Distribution Point List Box
 		$DPGridView.Rows.Clear()
 		if ($DistributionPoints -ne $null) {
@@ -16383,7 +16385,7 @@ AABJRU5ErkJgggs='))
 				New-CMProgram -PackageID $($ConfiMgrPackage.PackageID) -CommandLine "$HPSoftPaqFileName $HPSoftPaqSwitches" -StandardProgramName "$HPSoftPaqID Installer" -duration 15 -ProgramRunType WhetherOrNotUserIsLoggedOn -RunMode RunWithAdministrativeRights
 				Start-Sleep -Seconds 5
 				global:Write-LogEntry -Value "- $($Product): Enabling dynamic deployment for Package ID $($ConfiMgrPackage.PackageID)" -Severity 1
-				$PackageQuery = Get-WmiObject -ComputerName $SiteServerInput.Text -Namespace "Root\sms\Site_$($SiteCodeText.Text)" -Class SMS_Program -Filter "PackageID='$($ConfiMgrPackage.PackageID)'"
+				$PackageQuery = Get-CimInstance -ComputerName $SiteServerInput.Text -Namespace "Root\sms\Site_$($SiteCodeText.Text)" -ClassName SMS_Program -Filter "PackageID='$($ConfiMgrPackage.PackageID)'"
 				foreach ($Program in $PackageQuery) {
 					If (($Program.ProgramFlags -band ([math]::pow(2, 0))) -eq 0) {
 						global:Write-LogEntry -Value "- $($Product): Setting enabled flag on program `"$($Program.ProgramName)`"" -Severity 1
@@ -16488,6 +16490,7 @@ AABJRU5ErkJgggs='))
 						Start-BitsTransfer -DisplayName "$Model-DriverDownload" -Source $DriverDownload -Destination "$($DownloadRoot + $Model + '\Driver Cab\' + $DriverCab)" -Asynchronous
 						Start-Sleep -Seconds 5
 						while ((Get-BitsTransfer -Name "$Model-DriverDownload" -ErrorAction SilentlyContinue).JobState -notmatch "Transferred|Suspended") {
+									[System.Windows.Forms.Application]::DoEvents()
 							Invoke-BitsJobMonitor -BitsJobName "$Model-DriverDownload" -DownloadSource $DriverDownload
 						}
 						if ((Get-BitsTransfer -Name "$Model-DriverDownload" -ErrorAction SilentlyContinue).JobState -eq "Transferred") {
@@ -16510,6 +16513,7 @@ AABJRU5ErkJgggs='))
 								Start-BitsTransfer -DisplayName "$Model-DriverDownload" -Source $DriverDownload -Destination "$($DownloadRoot + $Model + '\Driver Cab\' + $DriverCab)" -Asynchronous
 								Start-Sleep -Seconds 5
 								while ((Get-BitsTransfer -Name "$Model-DriverDownload" -ErrorAction SilentlyContinue).JobState -notmatch "Transferred|Suspended") {
+									[System.Windows.Forms.Application]::DoEvents()
 									Invoke-BitsJobMonitor -BitsJobName "$Model-DriverDownload" -DownloadSource $DriverDownload
 								}
 								if ((Get-BitsTransfer -Name "$Model-DriverDownload" -ErrorAction SilentlyContinue).JobState -eq "Transferred") {
