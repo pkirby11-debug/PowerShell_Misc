@@ -885,39 +885,54 @@ Process {
 				$AdminServiceUri = $AdminServiceURL + $Resource
 				Write-CMLogEntry -Value " - Calling AdminService endpoint with URI: $($AdminServiceUri)" -Severity 1
 				
-				try {
-					# Call AdminService endpoint to retrieve package data
-					$AdminServiceResponse = Invoke-RestMethod -Method Get -Uri $AdminServiceUri -Credential $Credential -ErrorAction Stop
-				}
-				catch [System.Security.Authentication.AuthenticationException] {
-					Write-CMLogEntry -Value " - The remote AdminService endpoint certificate is invalid according to the validation procedure. Error message: $($PSItem.Exception.Message)" -Severity 2
-					Write-CMLogEntry -Value " - Will attempt to set the current session to ignore self-signed certificates and retry AdminService endpoint connection" -Severity 2
-					
-					# Attempt to ignore self-signed certificate binding for AdminService
-					# Convert encoded base64 string for ignore self-signed certificate validation functionality
-					$CertificationValidationCallbackEncoded = "DQAKACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAdQBzAGkAbgBnACAAUwB5AHMAdABlAG0AOwANAAoAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAB1AHMAaQBuAGcAIABTAHkAcwB0AGUAbQAuAE4AZQB0ADsADQAKACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAdQBzAGkAbgBnACAAUwB5AHMAdABlAG0ALgBOAGUAdAAuAFMAZQBjAHUAcgBpAHQAeQA7AA0ACgAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgAHUAcwBpAG4AZwAgAFMAeQBzAHQAZQBtAC4AUwBlAGMAdQByAGkAdAB5AC4AQwByAHkAcAB0AG8AZwByAGEAcABoAHkALgBYADUAMAA5AEMAZQByAHQAaQBmAGkAYwBhAHQAZQBzADsADQAKACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAcAB1AGIAbABpAGMAIABjAGwAYQBzAHMAIABTAGUAcgB2AGUAcgBDAGUAcgB0AGkAZgBpAGMAYQB0AGUAVgBhAGwAaQBkAGEAdABpAG8AbgBDAGEAbABsAGIAYQBjAGsADQAKACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAewANAAoAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgAHAAdQBiAGwAaQBjACAAcwB0AGEAdABpAGMAIAB2AG8AaQBkACAASQBnAG4AbwByAGUAKAApAA0ACgAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAewANAAoAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAaQBmACgAUwBlAHIAdgBpAGMAZQBQAG8AaQBuAHQATQBhAG4AYQBnAGUAcgAuAFMAZQByAHYAZQByAEMAZQByAHQAaQBmAGkAYwBhAHQAZQBWAGEAbABpAGQAYQB0AGkAbwBuAEMAYQBsAGwAYgBhAGMAawAgAD0APQBuAHUAbABsACkADQAKACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgAHsADQAKACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAUwBlAHIAdgBpAGMAZQBQAG8AaQBuAHQATQBhAG4AYQBnAGUAcgAuAFMAZQByAHYAZQByAEMAZQByAHQAaQBmAGkAYwBhAHQAZQBWAGEAbABpAGQAYQB0AGkAbwBuAEMAYQBsAGwAYgBhAGMAawAgACsAPQAgAA0ACgAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAZABlAGwAZQBnAGEAdABlAA0ACgAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAKAANAAoAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAATwBiAGoAZQBjAHQAIABvAGIAagAsACAADQAKACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgAFgANQAwADkAQwBlAHIAdABpAGYAaQBjAGEAdABlACAAYwBlAHIAdABpAGYAaQBjAGEAdABlACwAIAANAAoAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAWAA1ADAAOQBDAGgAYQBpAG4AIABjAGgAYQBpAG4ALAAgAA0ACgAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIABTAHMAbABQAG8AbABpAGMAeQBFAHIAcgBvAHIAcwAgAGUAcgByAG8AcgBzAA0ACgAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAKQANAAoAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgAHsADQAKACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgAHIAZQB0AHUAcgBuACAAdAByAHUAZQA7AA0ACgAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAfQA7AA0ACgAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAB9AA0ACgAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAfQANAAoAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAB9AA0ACgAgACAAIAAgACAAIAAgACAA"
-					$CertificationValidationCallback = [Text.Encoding]::Unicode.GetString([Convert]::FromBase64String($CertificationValidationCallbackEncoded))
-					
-					# Load required type definition to be able to ignore self-signed certificate to circumvent issues with AdminService running with ConfigMgr self-signed certificate binding
-					Add-Type -TypeDefinition $CertificationValidationCallback
-					[ServerCertificateValidationCallback]::Ignore()
-					
+				# Retry logic for Invoke-RestMethod
+				$RetryCount = 3
+				$RetryInterval = 5
+				for ($i = 1; $i -le $RetryCount; $i++) {
 					try {
 						# Call AdminService endpoint to retrieve package data
 						$AdminServiceResponse = Invoke-RestMethod -Method Get -Uri $AdminServiceUri -Credential $Credential -ErrorAction Stop
+						break
 					}
-					catch [System.Exception] {
-						Write-CMLogEntry -Value " - Failed to retrieve available package items from AdminService endpoint. Error message: $($PSItem.Exception.Message)" -Severity 3
+					catch [System.Security.Authentication.AuthenticationException] {
+						Write-CMLogEntry -Value " - The remote AdminService endpoint certificate is invalid according to the validation procedure. Error message: $($PSItem.Exception.Message)" -Severity 2
+						Write-CMLogEntry -Value " - Will attempt to set the current session to ignore self-signed certificates and retry AdminService endpoint connection" -Severity 2
 						
-						# Throw terminating error						
-						$PSCmdlet.ThrowTerminatingError((New-TerminatingErrorRecord))
+						# Attempt to ignore self-signed certificate binding for AdminService
+						# Convert encoded base64 string for ignore self-signed certificate validation functionality
+						$CertificationValidationCallbackEncoded = "DQAKACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAdQBzAGkAbgBnACAAUwB5AHMAdABlAG0AOwANAAoAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAB1AHMAaQBuAGcAIABTAHkAcwB0AGUAbQAuAE4AZQB0ADsADQAKACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAdQBzAGkAbgBnACAAUwB5AHMAdABlAG0ALgBOAGUAdAAuAFMAZQBjAHUAcgBpAHQAeQA7AA0ACgAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgAHUAcwBpAG4AZwAgAFMAeQBzAHQAZQBtAC4AUwBlAGMAdQByAGkAdAB5AC4AQwByAHkAcAB0AG8AZwByAGEAcABoAHkALgBYADUAMAA5AEMAZQByAHQAaQBmAGkAYwBhAHQAZQBzADsADQAKACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAcAB1AGIAbABpAGMAIABjAGwAYQBzAHMAIABTAGUAcgB2AGUAcgBDAGUAcgB0AGkAZgBpAGMAYQB0AGUAVgBhAGwAaQBkAGEAdABpAG8AbgBDAGEAbABsAGIAYQBjAGsADQAKACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAewANAAoAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgAHAAdQBiAGwAaQBjACAAcwB0AGEAdABpAGMAIAB2AG8AaQBkACAASQBnAG4AbwByAGUAKAApAA0ACgAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAewANAAoAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAaQBmACgAUwBlAHIAdgBpAGMAZQBQAG8AaQBuAHQATQBhAG4AYQBnAGUAcgAuAFMAZQByAHYAZQByAEMAZQByAHQAaQBmAGkAYwBhAHQAZQBWAGEAbABpAGQAYQB0AGkAbwBuAEMAYQBsAGwAYgBhAGMAawAgAD0APQBuAHUAbABsACkADQAKACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgAHsADQAKACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAUwBlAHIAdgBpAGMAZQBQAG8AaQBuAHQATQBhAG4AYQBnAGUAcgAuAFMAZQByAHYAZQByAEMAZQByAHQAaQBmAGkAYwBhAHQAZQBWAGEAbABpAGQAYQB0AGkAbwBuAEMAYQBsAGwAYgBhAGMAawAgACsAPQAgAA0ACgAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAZABlAGwAZQBnAGEAdABlAA0ACgAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAKAANAAoAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAATwBiAGoAZQBjAHQAIABvAGIAagAsACAADQAKACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgAFgANQAwADkAQwBlAHIAdABpAGYAaQBjAGEAdABlACAAYwBlAHIAdABpAGYAaQBjAGEAdABlACwAIAANAAoAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAWAA1ADAAOQBDAGgAYQBpAG4AIABjAGgAYQBpAG4ALAAgAA0ACgAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIABTAHMAbABQAG8AbABpAGMAeQBFAHIAcgBvAHIAcwAgAGUAcgByAG8AcgBzAA0ACgAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAKQANAAoAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgAHsADQAKACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgAHIAZQB0AHUAcgBuACAAdAByAHUAZQA7AA0ACgAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAfQA7AA0ACgAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAB9AA0ACgAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAfQANAAoAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAB9AA0ACgAgACAAIAAgACAAIAAgACAA"
+						$CertificationValidationCallback = [Text.Encoding]::Unicode.GetString([Convert]::FromBase64String($CertificationValidationCallbackEncoded))
+
+						# Load required type definition to be able to ignore self-signed certificate to circumvent issues with AdminService running with ConfigMgr self-signed certificate binding
+						Add-Type -TypeDefinition $CertificationValidationCallback
+						[ServerCertificateValidationCallback]::Ignore()
+
+						try {
+							# Call AdminService endpoint to retrieve package data
+							$AdminServiceResponse = Invoke-RestMethod -Method Get -Uri $AdminServiceUri -Credential $Credential -ErrorAction Stop
+							break
+						}
+						catch [System.Exception] {
+							if ($i -lt $RetryCount) {
+								Write-CMLogEntry -Value " - Failed to retrieve available package items from AdminService endpoint. Retrying in $RetryInterval seconds. Error message: $($PSItem.Exception.Message)" -Severity 2
+								Start-Sleep -Seconds $RetryInterval
+							}
+							else {
+								Write-CMLogEntry -Value " - Failed to retrieve available package items from AdminService endpoint after $RetryCount attempts. Error message: $($PSItem.Exception.Message)" -Severity 3
+								$PSCmdlet.ThrowTerminatingError((New-TerminatingErrorRecord))
+							}
+						}
 					}
-				}
-				catch {
-					Write-CMLogEntry -Value " - Failed to retrieve available package items from AdminService endpoint. Error message: $($PSItem.Exception.Message)" -Severity 3
-					
-					# Throw terminating error					
-					$PSCmdlet.ThrowTerminatingError((New-TerminatingErrorRecord))
+					catch {
+						if ($i -lt $RetryCount) {
+							Write-CMLogEntry -Value " - Failed to retrieve available package items from AdminService endpoint. Retrying in $RetryInterval seconds. Error message: $($PSItem.Exception.Message)" -Severity 2
+							Start-Sleep -Seconds $RetryInterval
+						}
+						else {
+							Write-CMLogEntry -Value " - Failed to retrieve available package items from AdminService endpoint after $RetryCount attempts. Error message: $($PSItem.Exception.Message)" -Severity 3
+							$PSCmdlet.ThrowTerminatingError((New-TerminatingErrorRecord))
+						}
+					}
 				}
 			}
 		}
@@ -1147,60 +1162,60 @@ Process {
 		}
 
 		# Gather computer details based upon specific computer manufacturer
-		$ComputerSystem = Get-CimInstance -ClassName "Win32_ComputerSystem"
+		$ComputerSystem = Get-CimInstance -ClassName "Win32_ComputerSystem" | Select-Object -Property Manufacturer, Model, OEMStringArray
 		$ComputerManufacturer = $ComputerSystem.Manufacturer.Trim()
 		switch -Wildcard ($ComputerManufacturer) {
 			"*Microsoft*" {
 				$ComputerDetails.Manufacturer = "Microsoft"
 				$ComputerDetails.Model = $ComputerSystem.Model.Trim()
-				$ComputerDetails.SystemSKU = (Get-CimInstance -Namespace "root\wmi" -ClassName "MS_SystemInformation").SystemSKU
+				$ComputerDetails.SystemSKU = (Get-CimInstance -Namespace "root\wmi" -ClassName "MS_SystemInformation" | Select-Object -Property SystemSKU).SystemSKU
 			}
 			"*HP*" {
 				$ComputerDetails.Manufacturer = "HP"
 				$ComputerDetails.Model = $ComputerSystem.Model.Trim()
-				$ComputerDetails.SystemSKU = (Get-CIMInstance -ClassName "MS_SystemInformation" -NameSpace "root\WMI").BaseBoardProduct.Trim()
+				$ComputerDetails.SystemSKU = (Get-CIMInstance -ClassName "MS_SystemInformation" -NameSpace "root\WMI" | Select-Object -Property BaseBoardProduct).BaseBoardProduct.Trim()
 			}
 			"*Hewlett-Packard*" {
 				$ComputerDetails.Manufacturer = "HP"
 				$ComputerDetails.Model = $ComputerSystem.Model.Trim()
-				$ComputerDetails.SystemSKU = (Get-CIMInstance -ClassName "MS_SystemInformation" -NameSpace "root\WMI").BaseBoardProduct.Trim()
+				$ComputerDetails.SystemSKU = (Get-CIMInstance -ClassName "MS_SystemInformation" -NameSpace "root\WMI" | Select-Object -Property BaseBoardProduct).BaseBoardProduct.Trim()
 			}
 			"*Dell*" {
 				$ComputerDetails.Manufacturer = "Dell"
 				$ComputerDetails.Model = $ComputerSystem.Model.Trim()
-				$ComputerDetails.SystemSKU = (Get-CIMInstance -ClassName "MS_SystemInformation" -NameSpace "root\WMI").SystemSku.Trim()
+				$ComputerDetails.SystemSKU = (Get-CIMInstance -ClassName "MS_SystemInformation" -NameSpace "root\WMI" | Select-Object -Property SystemSku).SystemSku.Trim()
 				[string]$OEMString = $ComputerSystem.OEMStringArray
 				$ComputerDetails.FallbackSKU = [regex]::Matches($OEMString, '\[\S*]')[0].Value.TrimStart("[").TrimEnd("]")
 			}
 			"*Lenovo*" {
 				$ComputerDetails.Manufacturer = "Lenovo"
-				$ComputerDetails.Model = (Get-CimInstance -ClassName "Win32_ComputerSystemProduct").Version.Trim()
+				$ComputerDetails.Model = (Get-CimInstance -ClassName "Win32_ComputerSystemProduct" | Select-Object -Property Version).Version.Trim()
 				$ComputerDetails.SystemSKU = ($ComputerSystem.Model.SubString(0, 4)).Trim()
 			}
 			"*Panasonic*" {
 				$ComputerDetails.Manufacturer = "Panasonic Corporation"
 				$ComputerDetails.Model = $ComputerSystem.Model.Trim()
-				$ComputerDetails.SystemSKU = (Get-CIMInstance -ClassName "MS_SystemInformation" -NameSpace "root\WMI").BaseBoardProduct.Trim()
+				$ComputerDetails.SystemSKU = (Get-CIMInstance -ClassName "MS_SystemInformation" -NameSpace "root\WMI" | Select-Object -Property BaseBoardProduct).BaseBoardProduct.Trim()
 			}
 			"*Viglen*" {
 				$ComputerDetails.Manufacturer = "Viglen"
 				$ComputerDetails.Model = $ComputerSystem.Model.Trim()
-				$ComputerDetails.SystemSKU = (Get-CimInstance -ClassName "Win32_BaseBoard").SKU.Trim()
+				$ComputerDetails.SystemSKU = (Get-CimInstance -ClassName "Win32_BaseBoard" | Select-Object -Property SKU).SKU.Trim()
 			}
 			"*AZW*" {
 				$ComputerDetails.Manufacturer = "AZW"
 				$ComputerDetails.Model = $ComputerSystem.Model.Trim()
-				$ComputerDetails.SystemSKU = (Get-CIMInstance -ClassName "MS_SystemInformation" -NameSpace root\WMI).BaseBoardProduct.Trim()
+				$ComputerDetails.SystemSKU = (Get-CIMInstance -ClassName "MS_SystemInformation" -NameSpace root\WMI | Select-Object -Property BaseBoardProduct).BaseBoardProduct.Trim()
 			}
 			"*Fujitsu*" {
 				$ComputerDetails.Manufacturer = "Fujitsu"
 				$ComputerDetails.Model = $ComputerSystem.Model.Trim()
-				$ComputerDetails.SystemSKU = (Get-CimInstance -ClassName "Win32_BaseBoard").SKU.Trim()
+				$ComputerDetails.SystemSKU = (Get-CimInstance -ClassName "Win32_BaseBoard" | Select-Object -Property SKU).SKU.Trim()
 			}
 			"*Getac*" {
 				$ComputerDetails.Manufacturer = "Getac"
 				$ComputerDetails.Model = $ComputerSystem.Model.Trim()
-				$ComputerDetails.SystemSKU = (Get-CIMInstance -ClassName "MS_SystemInformation" -NameSpace root\WMI).BaseBoardProduct.Trim()
+				$ComputerDetails.SystemSKU = (Get-CIMInstance -ClassName "MS_SystemInformation" -NameSpace root\WMI | Select-Object -Property BaseBoardProduct).BaseBoardProduct.Trim()
 			}
 		}
 		
@@ -1239,7 +1254,7 @@ Process {
 	}
 	
 	function Get-ComputerSystemType {
-		$ComputerSystemType = (Get-CimInstance -ClassName "Win32_ComputerSystem").Model
+		$ComputerSystemType = (Get-CimInstance -ClassName "Win32_ComputerSystem" | Select-Object -Property Model).Model
 		if ($ComputerSystemType -notin @("Virtual Machine", "VMware Virtual Platform", "VirtualBox", "HVM domU", "KVM", "VMWare7,1")) {
 			Write-CMLogEntry -Value " - Supported computer platform detected, script execution allowed to continue" -Severity 1
 		}
@@ -1258,7 +1273,7 @@ Process {
 	
 	function Get-OperatingSystemVersion {
 		if (($Script:PSCmdlet.ParameterSetName -like "DriverUpdate") -or ($Script:PSCmdlet.ParameterSetName -like "OSUpgrade")) {
-			$OperatingSystemVersion = (Get-CimInstance -ClassName "Win32_OperatingSystem").Version
+			$OperatingSystemVersion = (Get-CimInstance -ClassName "Win32_OperatingSystem" | Select-Object -Property Version).Version
 			if ($OperatingSystemVersion -like "10.0.*") {
 				Write-CMLogEntry -Value " - Supported operating system version currently running detected, script execution allowed to continue" -Severity 1
 			}
@@ -1314,6 +1329,141 @@ Process {
 			return "ComputerModel"
 		}
 	}
+
+	function Get-DriverPackageDetails {
+		param(
+			[parameter(Mandatory = $true, HelpMessage = "Specify the driver package object to be processed.")]
+			[ValidateNotNullOrEmpty()]
+			[PSCustomObject]$DriverPackageItem
+		)
+		# Construct custom object to hold values for current driver package properties used for matching with current computer details
+		$DriverPackageDetails = [PSCustomObject]@{
+			PackageName  = $DriverPackageItem.Name
+			PackageID    = $DriverPackageItem.PackageID
+			PackageVersion = $DriverPackageItem.Version
+			DateCreated  = $DriverPackageItem.SourceDate
+			Manufacturer = $DriverPackageItem.Manufacturer
+			Model        = $null
+			SystemSKU    = $DriverPackageItem.Description.Split(":").Replace("(", "").Replace(")", "")[1]
+			OSName       = $null
+			OSVersion    = $null
+			Architecture = $null
+		}
+		# Add driver package model details depending on manufacturer to custom driver package details object
+		# - HP computer models require the manufacturer name to be a part of the model name, other manufacturers do not
+		try {
+			switch ($DriverPackageItem.Manufacturer) {
+				"Hewlett-Packard" {
+					$DriverPackageDetails.Model = $DriverPackageItem.Name.Replace("Hewlett-Packard", "HP").Replace(" - ", ":").Split(":").Trim()[1]
+				}
+				"HP" {
+					$DriverPackageDetails.Model = $DriverPackageItem.Name.Replace(" - ", ":").Split(":").Trim()[1]
+				}
+				default {
+					$DriverPackageDetails.Model = $DriverPackageItem.Name.Replace($DriverPackageItem.Manufacturer, "").Replace(" - ", ":").Split(":").Trim()[1]
+				}
+			}
+		}
+		catch [System.Exception] {
+			Write-CMLogEntry -Value "Failed. Error: $($_.Exception.Message)" -Severity 3
+		}
+		# Add driver package OS architecture details to custom driver package details object
+		if ($DriverPackageItem.Name -match "^.*(?<Architecture>(x86|x64)).*") {
+			$DriverPackageDetails.Architecture = $Matches.Architecture
+		}
+		# Add driver package OS name details to custom driver package details object
+		if ($DriverPackageItem.Name -match "^.*Windows.*(?<OSName>(10|11)).*") {
+			$DriverPackageDetails.OSName = -join @("Windows ", $Matches.OSName)
+		}
+		# Add driver package OS version details to custom driver package details object
+		if ($DriverPackageItem.Name -match "^.*Windows.*(?<OSVersion>(\d){4}).*|^.*Windows.*(?<OSVersion>(\d){2}(\D){1}(\d){1}).*") {
+			$DriverPackageDetails.OSVersion = $Matches.OSVersion
+		}
+		return $DriverPackageDetails
+	}
+
+	function Test-DriverPackageMatch {
+		param(
+			[parameter(Mandatory = $true, HelpMessage = "Specify the driver package details object.")]
+			[ValidateNotNullOrEmpty()]
+			[PSCustomObject]$DriverPackageDetails,
+			[parameter(Mandatory = $true, HelpMessage = "Specify the computer data object.")]
+			[ValidateNotNullOrEmpty()]
+			[PSCustomObject]$ComputerData,
+			[parameter(Mandatory = $true, HelpMessage = "Specify the OS Image details object.")]
+			[ValidateNotNullOrEmpty()]
+			[PSCustomObject]$OSImageData,
+			[parameter(Mandatory = $false, HelpMessage = "Set to True to check for drivers packages that matches earlier versions of Windows than what's detected from admin service call.")]
+			[ValidateNotNullOrEmpty()]
+			[bool]$OSVersionFallback = $false
+		)
+		$DetectionCounter = 0
+		if ($DriverPackageDetails.OSVersion -ne $null) {
+			$DetectionMethodsCount = 4
+		}
+		else {
+			$DetectionMethodsCount = 3
+		}
+		Write-CMLogEntry -Value "[DriverPackage:$($DriverPackageDetails.PackageID)]: Processing driver package with $($DetectionMethodsCount) detection methods: $($DriverPackageDetails.PackageName)" -Severity 1
+		switch ($ComputerDetectionMethod) {
+			"SystemSKU" {
+				if ([string]::IsNullOrEmpty($DriverPackageDetails.SystemSKU)) {
+					Write-CMLogEntry -Value "[DriverPackage:$($DriverPackageDetails.PackageID)]: Driver package was skipped due to missing SystemSKU values in description field" -Severity 2
+					return $false
+				}
+				else {
+					$ComputerDetectionMethodResult = Confirm-SystemSKU -DriverPackageInput $DriverPackageDetails.SystemSKU -ComputerData $ComputerData -ErrorAction Stop
+					if ($ComputerDetectionMethodResult.Detected -eq $false) {
+						$ComputerDetectionMethodResult = Confirm-ComputerModel -DriverPackageInput $DriverPackageDetails.Model -ComputerData $ComputerData
+					}
+				}
+			}
+			"ComputerModel" {
+				$ComputerDetectionMethodResult = Confirm-ComputerModel -DriverPackageInput $DriverPackageDetails.Model -ComputerData $ComputerData
+			}
+		}
+		if ($ComputerDetectionMethodResult.Detected -eq $true) {
+			$DetectionCounter++
+			$OSNameDetectionResult = Confirm-OSName -DriverPackageInput $DriverPackageDetails.OSName -OSImageData $OSImageData
+			if ($OSNameDetectionResult -eq $true) {
+				$DetectionCounter++
+				$OSArchitectureDetectionResult = Confirm-Architecture -DriverPackageInput $DriverPackageDetails.Architecture -OSImageData $OSImageData
+				if ($OSArchitectureDetectionResult -eq $true) {
+					$DetectionCounter++
+					if ($DriverPackageDetails.OSVersion -ne $null) {
+						if ($OSVersionFallback -eq $true) {
+							$OSVersionDetectionResult = Confirm-OSVersion -DriverPackageInput $DriverPackageDetails.OSVersion -OSImageData $OSImageData -OSVersionFallback $true
+						}
+						else {
+							$OSVersionDetectionResult = Confirm-OSVersion -DriverPackageInput $DriverPackageDetails.OSVersion -OSImageData $OSImageData
+						}
+						if ($OSVersionDetectionResult -eq $true) {
+							$DetectionCounter++
+							Write-CMLogEntry -Value "[DriverPackage:$($DriverPackageDetails.PackageID)]: Driver package was created on: $($DriverPackageDetails.DateCreated)" -Severity 1
+							Write-CMLogEntry -Value "[DriverPackage:$($DriverPackageDetails.PackageID)]: Match found between driver package and computer for $($DetectionCounter)/$($DetectionMethodsCount) checks, adding to list for post-processing of matched driver packages" -Severity 1
+							if ($ComputerDetectionMethod -like "SystemSKU") {
+								$DriverPackageDetails.SystemSKU = $ComputerDetectionMethodResult.SystemSKUValue
+							}
+							return $true
+						}
+						else {
+							Write-CMLogEntry -Value "[DriverPackage:$($DriverPackageDetails.PackageID)]: Skipping driver package since only $($DetectionCounter)/$($DetectionMethodsCount) checks was matched" -Severity 2
+							return $false
+						}
+					}
+					else {
+						Write-CMLogEntry -Value "[DriverPackage:$($DriverPackageDetails.PackageID)]: Driver package was created on: $($DriverPackageDetails.DateCreated)" -Severity 1
+						Write-CMLogEntry -Value "[DriverPackage:$($DriverPackageDetails.PackageID)]: Match found between driver package and computer, adding to list for post-processing of matched driver packages" -Severity 1
+						if ($ComputerDetectionMethod -like "SystemSKU") {
+							$DriverPackageDetails.SystemSKU = $ComputerDetectionMethodResult.SystemSKUValue
+						}
+						return $true
+					}
+				}
+			}
+		}
+		return $false
+	}
 	
 	function Confirm-DriverPackage {
 		param(
@@ -1338,161 +1488,26 @@ Process {
 		$DriverPackagesCount = ($DriverPackages | Measure-Object).Count
 		Write-CMLogEntry -Value " - Initial count of driver packages before starting filtering process: $($DriverPackagesCount)" -Severity 1
 		
-		# Filter out driver packages that does not match with the vendor
+		# Filter out driver packages that does not match with the vendor or have an empty description
 		Write-CMLogEntry -Value " - Filtering driver package results to detected computer manufacturer: $($ComputerData.Manufacturer)" -Severity 1
 		$DriverPackages = $DriverPackages | Where-Object {
-			$_.Manufacturer -like $ComputerData.Manufacturer
+			$_.Manufacturer -like $ComputerData.Manufacturer -and $_.Description -ne ([string]::Empty)
 		}
 		$DriverPackagesCount = ($DriverPackages | Measure-Object).Count
-		Write-CMLogEntry -Value " - Count of driver packages after filter processing: $($DriverPackagesCount)" -Severity 1
+		Write-CMLogEntry -Value " - Initial count of driver packages before starting filtering process: $($DriverPackagesCount)" -Severity 1
 		
-		# Filter out driver packages that does not contain any value in the package description
-		Write-CMLogEntry -Value " - Filtering driver package results to only include packages that have details added to the description field" -Severity 1
+		# Filter out driver packages that does not match with the vendor or have an empty description
+		Write-CMLogEntry -Value " - Filtering driver package results to detected computer manufacturer: $($ComputerData.Manufacturer)" -Severity 1
 		$DriverPackages = $DriverPackages | Where-Object {
-			$_.Description -ne ([string]::Empty)
+			$_.Manufacturer -like $ComputerData.Manufacturer -and $_.Description -ne ([string]::Empty)
 		}
 		$DriverPackagesCount = ($DriverPackages | Measure-Object).Count
 		Write-CMLogEntry -Value " - Count of driver packages after filter processing: $($DriverPackagesCount)" -Severity 1
 		
 		foreach ($DriverPackageItem in $DriverPackages) {
-			# Construct custom object to hold values for current driver package properties used for matching with current computer details
-			$DriverPackageDetails = [PSCustomObject]@{
-				PackageName = $DriverPackageItem.Name
-				PackageID = $DriverPackageItem.PackageID
-				PackageVersion = $DriverPackageItem.Version
-				DateCreated = $DriverPackageItem.SourceDate
-				Manufacturer = $DriverPackageItem.Manufacturer
-				Model = $null
-				SystemSKU = $DriverPackageItem.Description.Split(":").Replace("(", "").Replace(")", "")[1]
-				OSName = $null
-				OSVersion = $null
-				Architecture = $null
-			}
-			
-			# Add driver package model details depending on manufacturer to custom driver package details object
-			# - HP computer models require the manufacturer name to be a part of the model name, other manufacturers do not
-			try {
-				switch ($DriverPackageItem.Manufacturer) {
-					"Hewlett-Packard" {
-						$DriverPackageDetails.Model = $DriverPackageItem.Name.Replace("Hewlett-Packard", "HP").Replace(" - ", ":").Split(":").Trim()[1]
-					}
-					"HP" {
-						$DriverPackageDetails.Model = $DriverPackageItem.Name.Replace(" - ", ":").Split(":").Trim()[1]
-					}
-					default {
-						$DriverPackageDetails.Model = $DriverPackageItem.Name.Replace($DriverPackageItem.Manufacturer, "").Replace(" - ", ":").Split(":").Trim()[1]
-					}
-				}
-			}
-			catch [System.Exception] {
-				Write-CMLogEntry -Value "Failed. Error: $($_.Exception.Message)" -Severity 3
-			}
-			
-			# Add driver package OS architecture details to custom driver package details object
-			if ($DriverPackageItem.Name -match "^.*(?<Architecture>(x86|x64)).*") {
-				$DriverPackageDetails.Architecture = $Matches.Architecture
-			}
-			
-			# Add driver package OS name details to custom driver package details object
-			if ($DriverPackageItem.Name -match "^.*Windows.*(?<OSName>(10|11)).*") {
-				$DriverPackageDetails.OSName = -join @("Windows ", $Matches.OSName)
-			}
-			
-			# Add driver package OS version details to custom driver package details object
-			if ($DriverPackageItem.Name -match "^.*Windows.*(?<OSVersion>(\d){4}).*|^.*Windows.*(?<OSVersion>(\d){2}(\D){1}(\d){1}).*") {
-				$DriverPackageDetails.OSVersion = $Matches.OSVersion
-			}
-			
-			# Set counters for logging output of how many matching checks was successfull
-			$DetectionCounter = 0
-			if ($DriverPackageDetails.OSVersion -ne $null) {
-				$DetectionMethodsCount = 4
-			}
-			else {
-				$DetectionMethodsCount = 3
-			}
-			Write-CMLogEntry -Value "[DriverPackage:$($DriverPackageDetails.PackageID)]: Processing driver package with $($DetectionMethodsCount) detection methods: $($DriverPackageDetails.PackageName)" -Severity 1
-			
-			switch ($ComputerDetectionMethod) {
-				"SystemSKU" {
-					if ([string]::IsNullOrEmpty($DriverPackageDetails.SystemSKU)) {
-						Write-CMLogEntry -Value "[DriverPackage:$($DriverPackageDetails.PackageID)]: Driver package was skipped due to missing SystemSKU values in description field" -Severity 2
-					}
-					else {
-						# Attempt to match against SystemSKU
-						$ComputerDetectionMethodResult = Confirm-SystemSKU -DriverPackageInput $DriverPackageDetails.SystemSKU -ComputerData $ComputerData -ErrorAction Stop
-						
-						# Fall back to using computer model as the detection method instead of SystemSKU
-						if ($ComputerDetectionMethodResult.Detected -eq $false) {
-							$ComputerDetectionMethodResult = Confirm-ComputerModel -DriverPackageInput $DriverPackageDetails.Model -ComputerData $ComputerData
-						}
-					}
-				}
-				"ComputerModel" {
-					# Attempt to match against computer model
-					$ComputerDetectionMethodResult = Confirm-ComputerModel -DriverPackageInput $DriverPackageDetails.Model -ComputerData $ComputerData
-				}
-			}
-			
-			if ($ComputerDetectionMethodResult.Detected -eq $true) {
-				# Increase detection counter since computer detection was successful
-				$DetectionCounter++
-				
-				# Attempt to match against OS name
-				$OSNameDetectionResult = Confirm-OSName -DriverPackageInput $DriverPackageDetails.OSName -OSImageData $OSImageData
-				if ($OSNameDetectionResult -eq $true) {
-					# Increase detection counter since OS name detection was successful
-					$DetectionCounter++
-					
-					$OSArchitectureDetectionResult = Confirm-Architecture -DriverPackageInput $DriverPackageDetails.Architecture -OSImageData $OSImageData
-					if ($OSArchitectureDetectionResult -eq $true) {
-						# Increase detection counter since OS architecture detection was successful
-						$DetectionCounter++
-						
-						if ($DriverPackageDetails.OSVersion -ne $null) {
-							# Handle if OS version should check for fallback versions or match with data from OSImageData variable
-							if ($OSVersionFallback -eq $true) {
-								$OSVersionDetectionResult = Confirm-OSVersion -DriverPackageInput $DriverPackageDetails.OSVersion -OSImageData $OSImageData -OSVersionFallback $true
-							}
-							else {
-								$OSVersionDetectionResult = Confirm-OSVersion -DriverPackageInput $DriverPackageDetails.OSVersion -OSImageData $OSImageData
-							}
-							
-							if ($OSVersionDetectionResult -eq $true) {
-								# Increase detection counter since OS version detection was successful
-								$DetectionCounter++
-								
-								# Match found for all critiera including OS version
-								Write-CMLogEntry -Value "[DriverPackage:$($DriverPackageItem.PackageID)]: Driver package was created on: $($DriverPackageDetails.DateCreated)" -Severity 1
-								Write-CMLogEntry -Value "[DriverPackage:$($DriverPackageItem.PackageID)]: Match found between driver package and computer for $($DetectionCounter)/$($DetectionMethodsCount) checks, adding to list for post-processing of matched driver packages" -Severity 1
-								
-								# Update the SystemSKU value for the custom driver package details object to account for multiple values from original driver package data
-								if ($ComputerDetectionMethod -like "SystemSKU") {
-									$DriverPackageDetails.SystemSKU = $ComputerDetectionMethodResult.SystemSKUValue
-								}
-								
-								# Add custom driver package details object to list of driver packages for post-processing
-								$DriverPackageList.Add($DriverPackageDetails) | Out-Null
-							}
-							else {
-								Write-CMLogEntry -Value "[DriverPackage:$($DriverPackageItem.PackageID)]: Skipping driver package since only $($DetectionCounter)/$($DetectionMethodsCount) checks was matched" -Severity 2
-							}
-						}
-						else {
-							# Match found for all critiera except for OS version, assuming here that the vendor does not provide OS version specific driver packages
-							Write-CMLogEntry -Value "[DriverPackage:$($DriverPackageItem.PackageID)]: Driver package was created on: $($DriverPackageDetails.DateCreated)" -Severity 1
-							Write-CMLogEntry -Value "[DriverPackage:$($DriverPackageItem.PackageID)]: Match found between driver package and computer, adding to list for post-processing of matched driver packages" -Severity 1
-							
-							# Update the SystemSKU value for the custom driver package details object to account for multiple values from original driver package data
-							if ($ComputerDetectionMethod -like "SystemSKU") {
-								$DriverPackageDetails.SystemSKU = $ComputerDetectionMethodResult.SystemSKUValue
-							}
-							
-							# Add custom driver package details object to list of driver packages for post-processing
-							$DriverPackageList.Add($DriverPackageDetails) | Out-Null
-						}
-					}
-				}
+			$DriverPackageDetails = Get-DriverPackageDetails -DriverPackageItem $DriverPackageItem
+			if (Test-DriverPackageMatch -DriverPackageDetails $DriverPackageDetails -ComputerData $ComputerData -OSImageData $OSImageData -OSVersionFallback $OSVersionFallback) {
+				$DriverPackageList.Add($DriverPackageDetails) | Out-Null
 			}
 		}
 	}
