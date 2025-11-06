@@ -16490,6 +16490,7 @@ AABJRU5ErkJgggs='))
 						Start-BitsTransfer -DisplayName "$Model-DriverDownload" -Source $DriverDownload -Destination "$($DownloadRoot + $Model + '\Driver Cab\' + $DriverCab)" -Asynchronous
 						Start-Sleep -Seconds 5
 						while ((Get-BitsTransfer -Name "$Model-DriverDownload" -ErrorAction SilentlyContinue).JobState -notmatch "Transferred|Suspended") {
+									[System.Windows.Forms.Application]::DoEvents()
 							Invoke-BitsJobMonitor -BitsJobName "$Model-DriverDownload" -DownloadSource $DriverDownload
 						}
 						if ((Get-BitsTransfer -Name "$Model-DriverDownload" -ErrorAction SilentlyContinue).JobState -eq "Transferred") {
@@ -16512,6 +16513,7 @@ AABJRU5ErkJgggs='))
 								Start-BitsTransfer -DisplayName "$Model-DriverDownload" -Source $DriverDownload -Destination "$($DownloadRoot + $Model + '\Driver Cab\' + $DriverCab)" -Asynchronous
 								Start-Sleep -Seconds 5
 								while ((Get-BitsTransfer -Name "$Model-DriverDownload" -ErrorAction SilentlyContinue).JobState -notmatch "Transferred|Suspended") {
+									[System.Windows.Forms.Application]::DoEvents()
 									Invoke-BitsJobMonitor -BitsJobName "$Model-DriverDownload" -DownloadSource $DriverDownload
 								}
 								if ((Get-BitsTransfer -Name "$Model-DriverDownload" -ErrorAction SilentlyContinue).JobState -eq "Transferred") {
